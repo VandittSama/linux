@@ -1063,7 +1063,28 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 
 	eax = kvm_rax_read(vcpu);
 	ecx = kvm_rcx_read(vcpu);
-	kvm_cpuid(vcpu, &eax, &ebx, &ecx, &edx, true);
+//Start of changes by vanditt
+	switch(eax){
+
+	case 0x4fffffff:
+		printk("*************EAX = F*******************");
+		break;
+
+	case 0x4ffffffe:
+		printk("*************EAX = E*******************");
+		break;
+
+	case 0x4ffffffd:
+		printk("*************EAX = D*******************");
+		break;
+
+	case 0x4ffffffc:
+		printk("*************EAX = C*******************");
+		break;
+
+	default: kvm_cpuid(vcpu, &eax, &ebx, &ecx, &edx, true);
+	}
+//End of changes by vanditt
 	kvm_rax_write(vcpu, eax);
 	kvm_rbx_write(vcpu, ebx);
 	kvm_rcx_write(vcpu, ecx);
