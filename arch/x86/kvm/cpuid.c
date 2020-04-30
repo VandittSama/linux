@@ -1054,6 +1054,9 @@ bool kvm_cpuid(struct kvm_vcpu *vcpu, u32 *eax, u32 *ebx,
 }
 EXPORT_SYMBOL_GPL(kvm_cpuid);
 
+uint32_t tot_exits;
+EXPORT_SYMBOL(tot_exits);
+
 int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 {
 	u32 eax, ebx, ecx, edx;
@@ -1067,19 +1070,20 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 	switch(eax){
 
 	case 0x4fffffff:
-		printk("*************EAX = F*******************");
+		printk("*************EAX (F) = %d*******************", tot_exits);
+		eax = tot_exits;
 		break;
 
 	case 0x4ffffffe:
-		printk("*************EAX = E*******************");
+		printk("*************EAX (E)= E*******************");
 		break;
 
 	case 0x4ffffffd:
-		printk("*************EAX = D*******************");
+		printk("*************EAX (D)= D*******************");
 		break;
 
 	case 0x4ffffffc:
-		printk("*************EAX = C*******************");
+		printk("*************EAX (C)= C*******************");
 		break;
 
 	default: kvm_cpuid(vcpu, &eax, &ebx, &ecx, &edx, true);
