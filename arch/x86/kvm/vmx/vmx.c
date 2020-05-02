@@ -5845,9 +5845,19 @@ static int vmx_handle_exit(struct kvm_vcpu *vcpu,
 	struct vcpu_vmx *vmx = to_vmx(vcpu);
 	u32 exit_reason = vmx->exit_reason;
 	u32 vectoring_info = vmx->idt_vectoring_info;
+
+//Start of changes by Vanditt
+	int ret;
+	extern atomic_t tot_exits;
+	extern uint32_t exits_arr[69];
+	extern uint64_t tot_time;
+	extern uint64_t time_arr[69];
+	uint64_t end_time;
 	
-	extern uint32_t tot_exits;
-	tot_exits++;
+	uint64_t start_time = rdtsc();
+	atomic_inc(&tot_exits);
+	exits_arr[exit_reason]++;
+//End of chnages by Vanditt
 
 	trace_kvm_exit(exit_reason, vcpu, KVM_ISA_VMX);
 
@@ -5955,8 +5965,14 @@ static int vmx_handle_exit(struct kvm_vcpu *vcpu,
 					 kvm_vmx_max_exit_handlers);
 	if (!kvm_vmx_exit_handlers[exit_reason])
 		goto unexpected_vmexit;
-
-	return kvm_vmx_exit_handlers[exit_reason](vcpu);
+//Start of changes by vanditt
+	ret = kvm_vmx_exit_handlers[exit_reason](vcpu);
+	end_time = rdtsc();
+	tot_time += end_time - start_time;
+	time_arr[exit_reason] += end_time - start_time;
+	return ret;
+//End of changes by vanditt
+	
 
 unexpected_vmexit:
 	vcpu_unimpl(vcpu, "vmx: unexpected exit reason 0x%x\n", exit_reason);

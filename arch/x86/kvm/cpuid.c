@@ -14,6 +14,7 @@
 #include <linux/vmalloc.h>
 #include <linux/uaccess.h>
 #include <linux/sched/stat.h>
+#include <asm/atomic.h> //added by vanditt
 
 #include <asm/processor.h>
 #include <asm/user.h>
@@ -1054,8 +1055,14 @@ bool kvm_cpuid(struct kvm_vcpu *vcpu, u32 *eax, u32 *ebx,
 }
 EXPORT_SYMBOL_GPL(kvm_cpuid);
 
-uint32_t tot_exits;
+atomic_t tot_exits;
 EXPORT_SYMBOL(tot_exits);
+uint32_t exits_arr[69];
+EXPORT_SYMBOL(exits_arr);
+uint64_t tot_time;
+EXPORT_SYMBOL(tot_time);
+uint64_t time_arr[69];
+EXPORT_SYMBOL(time_arr);
 
 int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 {
@@ -1070,20 +1077,25 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 	switch(eax){
 
 	case 0x4fffffff:
-		printk("*************EAX (F) = %d*******************", tot_exits);
-		eax = tot_exits;
+		printk("*************EAX (F) = F*******************");
+		eax = atomic_read(&tot_exits);
 		break;
 
 	case 0x4ffffffe:
 		printk("*************EAX (E)= E*******************");
+		ecx = tot_time; //lower 32 bits
+		ebx = (tot_time >> 32) ; //higher 32 bits
 		break;
 
 	case 0x4ffffffd:
 		printk("*************EAX (D)= D*******************");
+		eax = exits_arr[ecx];
 		break;
 
 	case 0x4ffffffc:
 		printk("*************EAX (C)= C*******************");
+		ebx = (time_arr[ecx] >> 32); //higher 32 bits		
+		ecx = time_arr[ecx]; //lower 32 bits
 		break;
 
 	default: kvm_cpuid(vcpu, &eax, &ebx, &ecx, &edx, true);
