@@ -44,6 +44,7 @@
 #include <asm/spec-ctrl.h>
 #include <asm/virtext.h>
 #include <asm/vmx.h>
+#include <asm/atomic.h> //added by vanditt
 
 #include "capabilities.h"
 #include "cpuid.h"
@@ -5849,14 +5850,14 @@ static int vmx_handle_exit(struct kvm_vcpu *vcpu,
 //Start of changes by Vanditt
 	int ret;
 	extern atomic_t tot_exits;
-	extern uint32_t exits_arr[69];
-	extern uint64_t tot_time;
-	extern uint64_t time_arr[69];
+	extern atomic_t exits_arr[69];
+	extern atomic64_t tot_time;
+	extern atomic64_t time_arr[69];
 	uint64_t end_time;
 	
 	uint64_t start_time = rdtsc();
 	atomic_inc(&tot_exits);
-	exits_arr[exit_reason]++;
+	atomic_inc(&exits_arr[exit_reason]);
 //End of chnages by Vanditt
 
 	trace_kvm_exit(exit_reason, vcpu, KVM_ISA_VMX);
@@ -5968,8 +5969,8 @@ static int vmx_handle_exit(struct kvm_vcpu *vcpu,
 //Start of changes by vanditt
 	ret = kvm_vmx_exit_handlers[exit_reason](vcpu);
 	end_time = rdtsc();
-	tot_time += end_time - start_time;
-	time_arr[exit_reason] += end_time - start_time;
+	atomic64_add(end_time - start_time, &tot_time);
+	atomic64_add(end_time - start_time, &time_arr[exit_reason]);
 	return ret;
 //End of changes by vanditt
 	

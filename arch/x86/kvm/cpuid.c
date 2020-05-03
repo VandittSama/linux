@@ -1057,11 +1057,11 @@ EXPORT_SYMBOL_GPL(kvm_cpuid);
 
 atomic_t tot_exits;
 EXPORT_SYMBOL(tot_exits);
-uint32_t exits_arr[69];
+atomic_t exits_arr[69] = { ATOMIC_INIT(0)};
 EXPORT_SYMBOL(exits_arr);
-uint64_t tot_time;
+atomic64_t tot_time;
 EXPORT_SYMBOL(tot_time);
-uint64_t time_arr[69];
+atomic64_t time_arr[69] = { ATOMIC_INIT(0)};
 EXPORT_SYMBOL(time_arr);
 
 int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
@@ -1083,19 +1083,19 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 
 	case 0x4ffffffe:
 		printk("*************EAX (E)= E*******************");
-		ecx = tot_time; //lower 32 bits
-		ebx = (tot_time >> 32) ; //higher 32 bits
+		ecx = atomic64_read(&tot_time); //lower 32 bits
+		ebx = (atomic64_read(&tot_time) >> 32) ; //higher 32 bits
 		break;
 
 	case 0x4ffffffd:
 		printk("*************EAX (D)= D*******************");
-		eax = exits_arr[ecx];
+		eax = atomic_read(&exits_arr[ecx]);
 		break;
 
 	case 0x4ffffffc:
 		printk("*************EAX (C)= C*******************");
-		ebx = (time_arr[ecx] >> 32); //higher 32 bits		
-		ecx = time_arr[ecx]; //lower 32 bits
+		ebx = (atomic64_read(&time_arr[ecx]) >> 32); //higher 32 bits		
+		ecx = atomic64_read(&time_arr[ecx]); //lower 32 bits
 		break;
 
 	default: kvm_cpuid(vcpu, &eax, &ebx, &ecx, &edx, true);
