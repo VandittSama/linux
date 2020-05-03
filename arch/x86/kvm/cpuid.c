@@ -1079,6 +1079,7 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 	case 0x4fffffff:
 		printk("*************EAX (F) = F*******************");
 		eax = atomic_read(&tot_exits);
+		ebx = 0;  //Removing garbage value
 		break;
 
 	case 0x4ffffffe:
@@ -1089,13 +1090,43 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 
 	case 0x4ffffffd:
 		printk("*************EAX (D)= D*******************");
-		eax = atomic_read(&exits_arr[ecx]);
+		if(ecx >= 0 && ecx <= 68){
+			if(ecx == 0x00000035 || ecx == 0x00000038 || ecx == 0x00000042 || ecx == 0x00000065){	//Not defined by SDM
+				eax = 0;
+				ebx = 0;
+				ecx = 0;
+				edx = 0xffffffff;
+			}else{
+				eax = atomic_read(&exits_arr[ecx]);
+				ebx = 0; 	//Removing grabage value
+			}		
+		}else{			//Not enabled by KVM
+			eax = 0;
+			ebx = 0;
+			ecx = 0;
+			edx = 0;
+		}
+		
 		break;
 
 	case 0x4ffffffc:
 		printk("*************EAX (C)= C*******************");
-		ebx = (atomic64_read(&time_arr[ecx]) >> 32); //higher 32 bits		
-		ecx = atomic64_read(&time_arr[ecx]); //lower 32 bits
+		if(ecx >= 0 && ecx <= 68){
+			if(ecx == 0x00000035 || ecx == 0x00000038 || ecx == 0x00000042 || ecx == 0x00000065){   //Not defined by SDM
+				eax = 0;
+				ebx = 0;
+				ecx = 0;
+				edx = 0xffffffff;
+			}else{
+				ebx = (atomic64_read(&time_arr[ecx]) >> 32); //higher 32 bits		
+				ecx = atomic64_read(&time_arr[ecx]); //lower 32 bits
+			}		
+		}else{			//Not enabled by KVM
+			eax = 0;
+			ebx = 0;
+			ecx = 0;
+			edx = 0;
+		}
 		break;
 
 	default: kvm_cpuid(vcpu, &eax, &ebx, &ecx, &edx, true);
