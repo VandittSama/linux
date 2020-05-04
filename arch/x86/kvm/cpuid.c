@@ -1055,11 +1055,11 @@ bool kvm_cpuid(struct kvm_vcpu *vcpu, u32 *eax, u32 *ebx,
 }
 EXPORT_SYMBOL_GPL(kvm_cpuid);
 
-atomic_t tot_exits;
+atomic_t tot_exits = ATOMIC_INIT(0);
 EXPORT_SYMBOL(tot_exits);
 atomic_t exits_arr[69] = { ATOMIC_INIT(0)};
 EXPORT_SYMBOL(exits_arr);
-atomic64_t tot_time;
+atomic64_t tot_time = ATOMIC_INIT(0);
 EXPORT_SYMBOL(tot_time);
 atomic64_t time_arr[69] = { ATOMIC_INIT(0)};
 EXPORT_SYMBOL(time_arr);
@@ -1090,8 +1090,8 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 
 	case 0x4ffffffd:
 		printk("*************EAX (D)= D*******************");
-		if(ecx >= 0 && ecx <= 68){
-			if(ecx == 0x00000035 || ecx == 0x00000038 || ecx == 0x00000042 || ecx == 0x00000065){	//Not defined by SDM
+		if(ecx >= 0x00000000 && ecx <= 0x00000044){
+			if(ecx == 0x00000023 || ecx == 0x00000026 || ecx == 0x0000002a || ecx == 0x00000041){	//Not defined by SDM
 				eax = 0;
 				ebx = 0;
 				ecx = 0;
@@ -1100,7 +1100,7 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 				eax = atomic_read(&exits_arr[ecx]);
 				ebx = 0; 	//Removing grabage value
 			}		
-		}else{			//Not enabled by KVM
+		}else{			//Invalid exit number
 			eax = 0;
 			ebx = 0;
 			ecx = 0;
@@ -1111,8 +1111,8 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 
 	case 0x4ffffffc:
 		printk("*************EAX (C)= C*******************");
-		if(ecx >= 0 && ecx <= 68){
-			if(ecx == 0x00000035 || ecx == 0x00000038 || ecx == 0x00000042 || ecx == 0x00000065){   //Not defined by SDM
+		if(ecx >= 0x00000000 && ecx <= 0x00000044){
+			if(ecx == 0x00000023 || ecx == 0x00000026 || ecx == 0x0000002a || ecx == 0x00000041){   //Not defined by SDM
 				eax = 0;
 				ebx = 0;
 				ecx = 0;
@@ -1121,7 +1121,7 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 				ebx = (atomic64_read(&time_arr[ecx]) >> 32); //higher 32 bits		
 				ecx = atomic64_read(&time_arr[ecx]); //lower 32 bits
 			}		
-		}else{			//Not enabled by KVM
+		}else{			//Invalid exit number
 			eax = 0;
 			ebx = 0;
 			ecx = 0;
