@@ -1066,6 +1066,7 @@ EXPORT_SYMBOL(time_arr);
 
 int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 {
+	int i;
 	u32 eax, ebx, ecx, edx;
 
 	if (cpuid_fault_enabled(vcpu) && !kvm_require_cpl(vcpu, 0))
@@ -1074,22 +1075,25 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 	eax = kvm_rax_read(vcpu);
 	ecx = kvm_rcx_read(vcpu);
 //Start of changes by vanditt
+	for(i = 0; i<69; i++){
+		printk("Number of exits for exit reason %d = %d", i, atomic_read(&exits_arr[i]));	
+	}
+
+	printk("Total number of exits = %d", atomic_read(&tot_exits));
+
 	switch(eax){
 
 	case 0x4fffffff:
-		printk("*************EAX (F) = F*******************");
 		eax = atomic_read(&tot_exits);
 		ebx = 0;  //Removing garbage value
 		break;
 
 	case 0x4ffffffe:
-		printk("*************EAX (E)= E*******************");
 		ecx = atomic64_read(&tot_time); //lower 32 bits
 		ebx = (atomic64_read(&tot_time) >> 32) ; //higher 32 bits
 		break;
 
 	case 0x4ffffffd:
-		printk("*************EAX (D)= D*******************");
 		if(ecx >= 0x00000000 && ecx <= 0x00000044){
 			if(ecx == 0x00000023 || ecx == 0x00000026 || ecx == 0x0000002a || ecx == 0x00000041){	//Not defined by SDM
 				eax = 0;
@@ -1104,13 +1108,13 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 			eax = 0;
 			ebx = 0;
 			ecx = 0;
-			edx = 0;
+			edx = 0xffffffff;
 		}
 		
 		break;
 
 	case 0x4ffffffc:
-		printk("*************EAX (C)= C*******************");
+
 		if(ecx >= 0x00000000 && ecx <= 0x00000044){
 			if(ecx == 0x00000023 || ecx == 0x00000026 || ecx == 0x0000002a || ecx == 0x00000041){   //Not defined by SDM
 				eax = 0;
@@ -1125,7 +1129,7 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 			eax = 0;
 			ebx = 0;
 			ecx = 0;
-			edx = 0;
+			edx = 0xffffffff;
 		}
 		break;
 
