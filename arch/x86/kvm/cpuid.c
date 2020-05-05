@@ -1091,6 +1091,7 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 	case 0x4ffffffe:
 		ecx = atomic64_read(&tot_time); //lower 32 bits
 		ebx = (atomic64_read(&tot_time) >> 32) ; //higher 32 bits
+		eax = 0;   //EAX not representing any value in this case so should be 0
 		break;
 
 	case 0x4ffffffd:
@@ -1100,6 +1101,11 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 				ebx = 0;
 				ecx = 0;
 				edx = 0xffffffff;
+			}else if(ecx == 0x00000003 || ecx == 0x00000004 || ecx == 0x00000005 || ecx == 0x00000006 || ecx == 0x0000000b || ecx == 0x00000010 || ecx == 0x00000011 || ecx == 0x00000021 || ecx == 0x00000022 || ecx == 0x00000033 || ecx == 0x0000003f || ecx == 0x00000040 || ecx == 0x00000042 || ecx == 0x00000043 || ecx == 0x00000044){	//Not enabled by kvm
+					eax = 0;
+					ebx = 0;
+					ecx = 0;
+					edx = 0;
 			}else{
 				eax = atomic_read(&exits_arr[ecx]);
 				ebx = 0; 	//Removing grabage value
@@ -1121,9 +1127,15 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 				ebx = 0;
 				ecx = 0;
 				edx = 0xffffffff;
+			}else if(ecx == 0x00000003 || ecx == 0x00000004 || ecx == 0x00000005 || ecx == 0x00000006 || ecx == 0x0000000b || ecx == 0x00000010 || ecx == 0x00000011 || ecx == 0x00000021 || ecx == 0x00000022 || ecx == 0x00000033 || ecx == 0x0000003f || ecx == 0x00000040 || ecx == 0x00000042 || ecx == 0x00000043 || ecx == 0x00000044){	//Not enabled by kvm
+					eax = 0;
+					ebx = 0;
+					ecx = 0;
+					edx = 0;
 			}else{
 				ebx = (atomic64_read(&time_arr[ecx]) >> 32); //higher 32 bits		
 				ecx = atomic64_read(&time_arr[ecx]); //lower 32 bits
+				eax = 0;   //EAX not representing any value in this case so should be 0
 			}		
 		}else{			//Invalid exit number
 			eax = 0;
